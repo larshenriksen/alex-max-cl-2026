@@ -164,9 +164,9 @@ function renderBracket() {
   root.append(left, mkFinalCol(locked, results, popular), right);
   updateSubmitButton(locked);
 
-  // Show lock banner
+  // Show lock banner only for deadline, not for already-submitted
   const lockBanner = document.getElementById('lock-banner');
-  if (lockBanner) lockBanner.style.display = locked ? 'block' : 'none';
+  if (lockBanner) lockBanner.style.display = isLocked() ? 'block' : 'none';
 }
 
 function mkRound(ids, paired, locked, results, popular) {
