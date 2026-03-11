@@ -1,0 +1,42 @@
+# Automatically fetches Champions League results and updates the site.
+# Runs every 4 hours and can also be triggered manually.
+#
+# SETUP:
+# 1. Go to https://www.football-data.org/client/register (free)
+# 2. Copy your API key
+# 3. Go to GitHub repo → Settings → Secrets → Actions
+# 4. Add secret: FOOTBALL_DATA_API_KEY = your key
+
+name: Update CL Results
+
+on:
+  schedule:
+    - cron: '15 */4 * * *'  # Every 4 hours at :15
+  workflow_dispatch: # Manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch latest results
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: node scripts/fetch-results.js
+
+      - name: Commit and push if changed
+        run: |
+          git diff --quiet config.js && echo "No changes" && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config.js
+          git commit -m "Auto-update CL results $(date -u +%Y-%m-%d)"
+          git push
