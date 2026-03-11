@@ -13,6 +13,7 @@ let selectedGroup = '';
 let selectedAvatar = '';
 let lbTab = GROUPS[0];
 let adminClicks = 0;
+let hasSubmitted = false;
 
 // ─── Helpers ───
 function el(tag, cls) {
@@ -123,10 +124,13 @@ async function startPredictions() {
   const existing = getSubmission(name, selectedGroup);
   if (existing) {
     predictions = { ...existing.predictions };
+    hasSubmitted = true;
     if (existing.avatar) {
       currentUser.avatar = existing.avatar;
       selectedAvatar = existing.avatar;
     }
+  } else {
+    hasSubmitted = false;
   }
   showPage('bracket');
 }
@@ -139,7 +143,7 @@ document.getElementById('input-name').addEventListener('input', checkStartReady)
 function renderBracket() {
   const root = document.getElementById('bracket');
   root.innerHTML = '';
-  const locked = isLocked();
+  const locked = isLocked() || hasSubmitted;
   const results = getEffectiveResults();
   const popular = getPopularPicks();
 
@@ -318,7 +322,7 @@ function mkFallbackLogo(team) {
 // PREDICTION LOGIC
 // ═══════════════════════════════════════
 function pickWinner(matchId, teamKey) {
-  if (isLocked()) return;
+  if (isLocked() || hasSubmitted) return;
   const teams = getMatchTeams(matchId);
   if (!teams.includes(teamKey) || teams.includes(null)) return;
   if (predictions[matchId] === teamKey) return;
@@ -348,6 +352,14 @@ function updateSubmitButton(locked) {
   const allPicked = count === ALL_MATCHES.length;
   const btn = document.getElementById('btn-submit');
   const info = document.getElementById('submit-info');
+
+  if (hasSubmitted) {
+    btn.disabled = true;
+    btn.textContent = 'ALLEREDE INDSENDT';
+    info.textContent = 'Dine forudsigelser er låst — du kan se dem, men ikke ændre';
+    info.className = 'submit-info submit-success';
+    return;
+  }
 
   if (locked) {
     btn.disabled = true;
@@ -467,9 +479,9 @@ function submitPredictions() {
     _fbSubmissions[key] = entry;
   }
 
+  hasSubmitted = true;
   showToast(`${currentUser.name} — dine forudsigelser er gemt!`);
-  document.getElementById('submit-info').textContent = 'Forudsigelser gemt!';
-  document.getElementById('submit-info').className = 'submit-info submit-success';
+  renderBracket(); // Re-render to lock the bracket
 }
 
 // ═══════════════════════════════════════
