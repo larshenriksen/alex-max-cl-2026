@@ -58,6 +58,12 @@ const POINTS = { r16: 1, qf: 2, sf: 3, final: 5 };
 // ─── GROUPS ───
 const GROUPS = ['U11', 'U8'];
 
+// ─── FIREBASE (delt data på tværs af enheder) ───
+// Opret et gratis Firebase-projekt og indsæt URL'en her.
+// Se instruktioner i README eller spørg Claude.
+// Sæt til null for at bruge localStorage alene (kun lokal).
+const FIREBASE_URL = 'https://alex-og-max-cl-2026-default-rtdb.europe-west1.firebasedatabase.app';
+
 // ─── DEADLINE ───
 // Predictions lock at this time. Set to null to disable.
 // Second legs start 17 March 2026 at 21:00 CET — lock 1 hour before.

@@ -42,7 +42,7 @@ function getMatchTeams(matchId) {
 }
 
 function getEffectiveResults() {
-  const adminResults = loadFromStorage('ucl_results', {});
+  const adminResults = _fbResults || loadFromStorage('ucl_results', {});
   return { ...RESULTS, ...adminResults };
 }
 
@@ -79,7 +79,13 @@ function showPage(id) {
     if (userEl) userEl.textContent = currentUser.name ? `${currentUser.name} (${currentUser.group})` : '';
     renderBracket();
   }
-  if (id === 'leaderboard') renderLeaderboard();
+  if (id === 'leaderboard') {
+    renderLeaderboard();
+    // Refresh from Firebase in background, then re-render
+    if (useFirebase) {
+      refreshFromFirebase().then(() => renderLeaderboard());
+    }
+  }
 }
 
 // ═══════════════════════════════════════
@@ -105,11 +111,15 @@ function checkStartReady() {
   document.getElementById('btn-start').disabled = !(name && selectedGroup);
 }
 
-function startPredictions() {
+async function startPredictions() {
   const name = document.getElementById('input-name').value.trim();
   if (!name || !selectedGroup) return;
   currentUser = { name, group: selectedGroup, avatar: selectedAvatar };
   predictions = {};
+
+  // Refresh from Firebase before loading existing submission
+  if (useFirebase) await refreshFromFirebase();
+
   const existing = getSubmission(name, selectedGroup);
   if (existing) {
     predictions = { ...existing.predictions };
@@ -359,19 +369,70 @@ function updateSubmitButton(locked) {
 }
 
 // ═══════════════════════════════════════
-// PERSISTENCE
+// PERSISTENCE (localStorage + Firebase)
 // ═══════════════════════════════════════
+const useFirebase = typeof FIREBASE_URL !== 'undefined' && FIREBASE_URL;
+
+// In-memory cache for Firebase data
+let _fbSubmissions = null;
+let _fbResults = null;
+
 function loadFromStorage(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) || fallback; }
   catch { return fallback; }
 }
 
-function loadSubmissions() { return loadFromStorage('ucl_submissions', []); }
+// ─── Firebase REST helpers ───
+async function fbPut(path, data) {
+  if (!useFirebase) return;
+  await fetch(`${FIREBASE_URL}/${path}.json`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+async function fbGet(path) {
+  if (!useFirebase) return null;
+  const res = await fetch(`${FIREBASE_URL}/${path}.json`);
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+// ─── Submissions ───
+function subKey(name, group) {
+  return (name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '__' + group).substring(0, 80);
+}
+
+function loadSubmissions() {
+  if (_fbSubmissions) return Object.values(_fbSubmissions);
+  return loadFromStorage('ucl_submissions', []);
+}
 
 function getSubmission(name, group) {
   return loadSubmissions().find(s =>
     s.name.toLowerCase() === name.toLowerCase() && s.group === group
   );
+}
+
+async function refreshFromFirebase() {
+  if (!useFirebase) return;
+  try {
+    const [subs, res] = await Promise.all([
+      fbGet('submissions'),
+      fbGet('results'),
+    ]);
+    if (subs) {
+      _fbSubmissions = subs;
+      // Sync to localStorage as cache
+      localStorage.setItem('ucl_submissions', JSON.stringify(Object.values(subs)));
+    }
+    if (res) {
+      _fbResults = res;
+      localStorage.setItem('ucl_results', JSON.stringify(res));
+    }
+  } catch (e) {
+    console.warn('Firebase sync failed, using localStorage:', e);
+  }
 }
 
 function submitPredictions() {
@@ -380,19 +441,32 @@ function submitPredictions() {
     showToast('Du mangler at vælge vinder i alle kampe!');
     return;
   }
-  const subs = loadSubmissions();
-  const idx = subs.findIndex(s =>
-    s.name.toLowerCase() === currentUser.name.toLowerCase() && s.group === currentUser.group
-  );
-  if (idx !== -1) subs.splice(idx, 1);
-  subs.push({
+  const entry = {
     name: currentUser.name,
     group: currentUser.group,
     avatar: currentUser.avatar,
     predictions: { ...predictions },
     timestamp: Date.now()
-  });
+  };
+
+  // Save to localStorage
+  const subs = loadFromStorage('ucl_submissions', []);
+  const idx = subs.findIndex(s =>
+    s.name.toLowerCase() === currentUser.name.toLowerCase() && s.group === currentUser.group
+  );
+  if (idx !== -1) subs.splice(idx, 1);
+  subs.push(entry);
   localStorage.setItem('ucl_submissions', JSON.stringify(subs));
+
+  // Save to Firebase
+  if (useFirebase) {
+    const key = subKey(currentUser.name, currentUser.group);
+    fbPut('submissions/' + key, entry).catch(e => console.warn('Firebase save failed:', e));
+    // Update cache
+    if (!_fbSubmissions) _fbSubmissions = {};
+    _fbSubmissions[key] = entry;
+  }
+
   showToast(`${currentUser.name} — dine forudsigelser er gemt!`);
   document.getElementById('submit-info').textContent = 'Forudsigelser gemt!';
   document.getElementById('submit-info').className = 'submit-info submit-success';
@@ -534,6 +608,13 @@ function saveAdminResults() {
     if (sel.value) results[sel.dataset.match] = sel.value;
   });
   localStorage.setItem('ucl_results', JSON.stringify(results));
+
+  // Save to Firebase
+  if (useFirebase) {
+    fbPut('results', results).catch(e => console.warn('Firebase save failed:', e));
+    _fbResults = results;
+  }
+
   renderLeaderboard(); renderAdmin();
   showToast('Resultater gemt!');
 }
