@@ -23,9 +23,11 @@ if (!API_KEY) {
 
 // ─── Team ID mapping (football-data.org ID → our team key) ───
 const TEAM_ID_MAP = {
-  524: 'psg', 61: 'chelsea', 548: 'galatasaray', 64: 'liverpool',
-  86: 'real_madrid', 65: 'man_city', 102: 'atalanta', 5: 'bayern',
-  67: 'newcastle', 81: 'barcelona', 78: 'atletico', 73: 'tottenham',
+  524: 'psg', 61: 'chelsea',
+  548: 'galatasaray', 610: 'galatasaray',  // 610 in match data, 548 for crests
+  64: 'liverpool', 86: 'real_madrid', 65: 'man_city',
+  102: 'atalanta', 5: 'bayern', 67: 'newcastle', 81: 'barcelona',
+  78: 'atletico', 73: 'tottenham',
   498: 'sporting', 3: 'leverkusen', 57: 'arsenal',
 };
 
@@ -40,7 +42,8 @@ function resolveTeamKey(teamId, teamName) {
   for (const [pattern, key] of Object.entries(TEAM_NAME_PATTERNS)) {
     if (lower.includes(pattern)) return key;
   }
-  console.warn(`Unknown team: id=${teamId} name="${teamName}"`);
+  // Null teams are TBD placeholders for unplayed rounds — expected, not a warning
+  if (teamId != null) console.warn(`Unknown team: id=${teamId} name="${teamName}"`);
   return null;
 }
 
