@@ -79,6 +79,24 @@ canvas#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;po
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(212,165,26,0.45)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
+/* ─── Avatar Grid ─── */
+.avatar-grid{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+}
+.avatar-option{
+  width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:2px solid var(--border);transition:all .25s;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:rgba(255,255,255,0.04);
+}
+.avatar-option:hover{border-color:var(--ucl-blue-mid);transform:scale(1.1)}
+.avatar-option.selected{border-color:var(--gold);box-shadow:0 0 14px var(--gold-dim);transform:scale(1.12)}
+.avatar-option img{width:34px;height:34px;object-fit:contain}
+.avatar-fb-inner{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;color:#fff;border-radius:50%;
+}
+
 /* ─── Top Nav ─── */
 .topnav{
   display:flex;align-items:center;justify-content:space-between;
@@ -96,6 +114,13 @@ canvas#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;po
   cursor:pointer;transition:all .25s;
 }
 .topnav-links button:hover{color:var(--text-primary);border-color:var(--ucl-blue-mid);background:rgba(26,71,168,0.15)}
+
+/* ─── Lock Banner ─── */
+.lock-banner{
+  text-align:center;padding:10px;
+  background:rgba(229,62,62,0.1);border-bottom:1px solid rgba(229,62,62,0.2);
+  color:#e53e3e;font-size:13px;font-weight:600;letter-spacing:.5px;
+}
 
 /* ─── Bracket Page ─── */
 .bracket-page{overflow:hidden}
@@ -149,6 +174,15 @@ canvas#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;po
 }
 .team-row.loser{opacity:.35}
 .team-row.empty{opacity:.25;cursor:default;pointer-events:none}
+.team-row.locked{cursor:default}
+.team-row.locked:hover:not(.empty){background:transparent}
+.team-row.actual-winner{background:rgba(56,161,105,0.1)}
+.team-row.actual-winner::before{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:3px;
+  background:#38a169;border-radius:2px 0 0 2px;
+}
+.team-row.correct .team-name{color:#38a169}
+.team-row.wrong .team-name{color:#e53e3e;text-decoration:line-through}
 .team-logo{
   width:30px;height:30px;border-radius:50%;object-fit:contain;
   background:rgba(255,255,255,0.06);flex-shrink:0;
@@ -160,7 +194,19 @@ canvas#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;po
   font-size:10px;font-weight:800;color:#fff;flex-shrink:0;
   border:1px solid rgba(255,255,255,0.12);
 }
-.team-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+
+/* Score & popularity badges */
+.score-badge{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text-primary);
+  margin-left:auto;min-width:14px;text-align:center;
+}
+.pen-badge{font-size:10px;color:var(--text-muted);margin-left:2px}
+.pop-pct{
+  font-size:10px;font-weight:600;color:var(--text-muted);
+  margin-left:auto;opacity:.7;min-width:28px;text-align:right;
+}
+.vs-divider.has-score{color:var(--text-secondary);font-size:11px}
 .vs-divider{
   position:absolute;right:8px;top:50%;transform:translateY(-50%);
   font-size:9px;font-weight:800;color:var(--text-muted);
@@ -296,6 +342,17 @@ canvas#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;po
 .lb-entry.top-1 .lb-rank{color:var(--gold)}
 .lb-entry.top-2 .lb-rank{color:#c0c0c0}
 .lb-entry.top-3 .lb-rank{color:#cd7f32}
+.lb-avatar{
+  width:32px;height:32px;border-radius:50%;object-fit:contain;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+  flex-shrink:0;
+}
+.lb-avatar-fb{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#fff;
+  border:1px solid rgba(255,255,255,0.08);
+}
 .lb-name{flex:1;font-weight:700;font-size:15px}
 .lb-points{
   font-family:'Bebas Neue',sans-serif;font-size:24px;

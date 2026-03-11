@@ -1,15 +1,16 @@
 // ═══════════════════════════════════════
 // Champions League Prediction Game — App Logic
-// Config is loaded from config.js (TEAMS, BRACKET, LAYOUT, POINTS, GROUPS, RESULTS)
+// Config: TEAMS, BRACKET, LAYOUT, POINTS, GROUPS, DEADLINE, RESULTS, SCORES
 // ═══════════════════════════════════════
 
 const ALL_MATCHES = Object.keys(BRACKET);
 const CREST_BASE = 'https://crests.football-data.org/';
 
 // ─── State ───
-let currentUser = { name: '', group: '' };
+let currentUser = { name: '', group: '', avatar: '' };
 let predictions = {};
 let selectedGroup = '';
+let selectedAvatar = '';
 let lbTab = GROUPS[0];
 let adminClicks = 0;
 
@@ -22,7 +23,13 @@ function el(tag, cls) {
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function crestURL(id) { return id ? CREST_BASE + id + '.png' : null; }
 
-// ─── Derived state: get teams for a match based on predictions ───
+// ─── Deadline ───
+function isLocked() {
+  if (!DEADLINE) return false;
+  return Date.now() > new Date(DEADLINE).getTime();
+}
+
+// ─── Derived state ───
 function getMatchTeams(matchId) {
   const def = BRACKET[matchId];
   if (def.round === 'r16') return [...def.teams];
@@ -34,10 +41,31 @@ function getMatchTeams(matchId) {
   return teams;
 }
 
-// ─── Merge config results + admin localStorage results ───
 function getEffectiveResults() {
   const adminResults = loadFromStorage('ucl_results', {});
   return { ...RESULTS, ...adminResults };
+}
+
+// ─── Popular picks (% of all submissions that picked each team) ───
+function getPopularPicks() {
+  const subs = loadSubmissions();
+  if (subs.length < 2) return {};
+  const picks = {};
+  for (const mid of ALL_MATCHES) {
+    const counts = {};
+    let total = 0;
+    for (const s of subs) {
+      const p = s.predictions[mid];
+      if (p) { counts[p] = (counts[p] || 0) + 1; total++; }
+    }
+    if (total > 0) {
+      picks[mid] = {};
+      for (const [tk, cnt] of Object.entries(counts)) {
+        picks[mid][tk] = Math.round((cnt / total) * 100);
+      }
+    }
+  }
+  return picks;
 }
 
 // ═══════════════════════════════════════
@@ -65,6 +93,13 @@ function selectGroup(g) {
   checkStartReady();
 }
 
+function selectAvatar(teamKey) {
+  selectedAvatar = teamKey;
+  document.querySelectorAll('.avatar-option').forEach(a =>
+    a.classList.toggle('selected', a.dataset.team === teamKey)
+  );
+}
+
 function checkStartReady() {
   const name = document.getElementById('input-name').value.trim();
   document.getElementById('btn-start').disabled = !(name && selectedGroup);
@@ -73,10 +108,16 @@ function checkStartReady() {
 function startPredictions() {
   const name = document.getElementById('input-name').value.trim();
   if (!name || !selectedGroup) return;
-  currentUser = { name, group: selectedGroup };
+  currentUser = { name, group: selectedGroup, avatar: selectedAvatar };
   predictions = {};
   const existing = getSubmission(name, selectedGroup);
-  if (existing) predictions = { ...existing.predictions };
+  if (existing) {
+    predictions = { ...existing.predictions };
+    if (existing.avatar) {
+      currentUser.avatar = existing.avatar;
+      selectedAvatar = existing.avatar;
+    }
+  }
   showPage('bracket');
 }
 
@@ -88,41 +129,48 @@ document.getElementById('input-name').addEventListener('input', checkStartReady)
 function renderBracket() {
   const root = document.getElementById('bracket');
   root.innerHTML = '';
+  const locked = isLocked();
+  const results = getEffectiveResults();
+  const popular = getPopularPicks();
 
   const left = el('div', 'bracket-side left');
   left.append(
-    mkRound(LAYOUT.leftR16, true),
-    mkRound(LAYOUT.leftQF),
-    mkRound(LAYOUT.leftSF)
+    mkRound(LAYOUT.leftR16, true, locked, results, popular),
+    mkRound(LAYOUT.leftQF, false, locked, results, popular),
+    mkRound(LAYOUT.leftSF, false, locked, results, popular)
   );
 
   const right = el('div', 'bracket-side right');
   right.append(
-    mkRound(LAYOUT.rightSF),
-    mkRound(LAYOUT.rightQF),
-    mkRound(LAYOUT.rightR16, true)
+    mkRound(LAYOUT.rightSF, false, locked, results, popular),
+    mkRound(LAYOUT.rightQF, false, locked, results, popular),
+    mkRound(LAYOUT.rightR16, true, locked, results, popular)
   );
 
-  root.append(left, mkFinalCol(), right);
-  updateSubmitButton();
+  root.append(left, mkFinalCol(locked, results, popular), right);
+  updateSubmitButton(locked);
+
+  // Show lock banner
+  const lockBanner = document.getElementById('lock-banner');
+  if (lockBanner) lockBanner.style.display = locked ? 'block' : 'none';
 }
 
-function mkRound(ids, paired) {
+function mkRound(ids, paired, locked, results, popular) {
   const roundName = BRACKET[ids[0]].round;
   const col = el('div', `bracket-round ${roundName}`);
   if (paired) {
     for (let i = 0; i < ids.length; i += 2) {
       const pair = el('div', 'match-pair');
-      pair.append(mkMatch(ids[i]), mkMatch(ids[i + 1]));
+      pair.append(mkMatch(ids[i], locked, results, popular), mkMatch(ids[i + 1], locked, results, popular));
       col.appendChild(pair);
     }
   } else {
-    ids.forEach(id => col.appendChild(mkMatch(id)));
+    ids.forEach(id => col.appendChild(mkMatch(id, locked, results, popular)));
   }
   return col;
 }
 
-function mkFinalCol() {
+function mkFinalCol(locked, results, popular) {
   const col = el('div', 'bracket-round final-round');
   const area = el('div', 'champion-area');
 
@@ -146,20 +194,28 @@ function mkFinalCol() {
   }
 
   col.appendChild(area);
-  const card = mkMatch('final');
+  const card = mkMatch('final', locked, results, popular);
   card.appendChild(el('div', 'connector-right'));
   col.appendChild(card);
   return col;
 }
 
-function mkMatch(matchId) {
+function mkMatch(matchId, locked, results, popular) {
   const card = el('div', 'match-card');
   card.dataset.match = matchId;
   const teams = getMatchTeams(matchId);
   const winner = predictions[matchId];
+  const actualWinner = results[matchId];
+  const score = typeof SCORES !== 'undefined' ? SCORES[matchId] : null;
+  const matchPop = popular[matchId];
+
+  // If there's an actual result, show the score instead of VS
+  const hasScore = score && score.agg;
 
   teams.forEach((tk, i) => {
     const row = el('div', 'team-row');
+    if (locked) row.classList.add('locked');
+
     if (!tk) {
       row.classList.add('empty');
       const fb = el('div', 'team-logo-fallback');
@@ -172,9 +228,21 @@ function mkMatch(matchId) {
       row.appendChild(n);
     } else {
       const team = TEAMS[tk];
+
+      // Winner/loser styling
       if (winner === tk) row.classList.add('winner');
       else if (winner) row.classList.add('loser');
 
+      // If actual result exists, mark correct/wrong
+      if (actualWinner && winner) {
+        if (winner === tk && winner === actualWinner) row.classList.add('correct');
+        else if (winner === tk && winner !== actualWinner) row.classList.add('wrong');
+      }
+
+      // Actual winner from results (green indicator)
+      if (actualWinner === tk) row.classList.add('actual-winner');
+
+      // Logo
       if (team.crest) {
         const img = document.createElement('img');
         img.className = 'team-logo';
@@ -190,12 +258,39 @@ function mkMatch(matchId) {
       const n = el('span', 'team-name');
       n.textContent = team.short;
       row.appendChild(n);
-      row.onclick = () => pickWinner(matchId, tk);
+
+      // Score display
+      if (hasScore) {
+        const sc = el('span', 'score-badge');
+        sc.textContent = score.agg[i];
+        row.appendChild(sc);
+        if (score.pen) {
+          const pen = el('span', 'pen-badge');
+          pen.textContent = `(${score.pen[i]})`;
+          row.appendChild(pen);
+        }
+      }
+
+      // Popular pick percentage
+      if (matchPop && matchPop[tk]) {
+        const pct = el('span', 'pop-pct');
+        pct.textContent = matchPop[tk] + '%';
+        row.appendChild(pct);
+      }
+
+      if (!locked) {
+        row.onclick = () => pickWinner(matchId, tk);
+      }
     }
     card.appendChild(row);
     if (i === 0) {
       const vs = el('div', 'vs-divider');
-      vs.textContent = 'VS';
+      if (hasScore) {
+        vs.textContent = '–';
+        vs.classList.add('has-score');
+      } else {
+        vs.textContent = 'VS';
+      }
       card.appendChild(vs);
     }
   });
@@ -213,6 +308,7 @@ function mkFallbackLogo(team) {
 // PREDICTION LOGIC
 // ═══════════════════════════════════════
 function pickWinner(matchId, teamKey) {
+  if (isLocked()) return;
   const teams = getMatchTeams(matchId);
   if (!teams.includes(teamKey) || teams.includes(null)) return;
   if (predictions[matchId] === teamKey) return;
@@ -237,11 +333,22 @@ function cascadeClear(matchId, oldTeam) {
   }
 }
 
-function updateSubmitButton() {
+function updateSubmitButton(locked) {
   const count = ALL_MATCHES.filter(id => predictions[id]).length;
   const allPicked = count === ALL_MATCHES.length;
-  document.getElementById('btn-submit').disabled = !allPicked;
+  const btn = document.getElementById('btn-submit');
   const info = document.getElementById('submit-info');
+
+  if (locked) {
+    btn.disabled = true;
+    btn.textContent = 'DEADLINE UDLØBET';
+    info.textContent = 'Det er ikke længere muligt at ændre forudsigelser';
+    info.className = 'submit-info';
+    return;
+  }
+
+  btn.textContent = 'INDSEND FORUDSIGELSER';
+  btn.disabled = !allPicked;
   if (allPicked) {
     info.textContent = `Alle ${count} kampe er valgt — klar til at indsende!`;
     info.className = 'submit-info submit-success';
@@ -268,6 +375,7 @@ function getSubmission(name, group) {
 }
 
 function submitPredictions() {
+  if (isLocked()) { showToast('Deadline er udløbet!'); return; }
   if (!ALL_MATCHES.every(id => predictions[id])) {
     showToast('Du mangler at vælge vinder i alle kampe!');
     return;
@@ -280,6 +388,7 @@ function submitPredictions() {
   subs.push({
     name: currentUser.name,
     group: currentUser.group,
+    avatar: currentUser.avatar,
     predictions: { ...predictions },
     timestamp: Date.now()
   });
@@ -329,21 +438,50 @@ function renderLeaderboard() {
   container.innerHTML = scored.map((s, i) => {
     const rc = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
     const medal = i === 0 ? '👑' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+    const avatarHTML = s.avatar && TEAMS[s.avatar]
+      ? (TEAMS[s.avatar].crest
+          ? `<img class="lb-avatar" src="${crestURL(TEAMS[s.avatar].crest)}" alt="${TEAMS[s.avatar].short}" onerror="this.style.display='none'">`
+          : `<div class="lb-avatar-fb" style="background:linear-gradient(135deg,${TEAMS[s.avatar].colors[0]},${TEAMS[s.avatar].colors[1]})">${TEAMS[s.avatar].short.substring(0,2)}</div>`)
+      : '<div class="lb-avatar-fb" style="background:rgba(255,255,255,0.08)">?</div>';
+
     return `<div class="lb-entry ${rc}">
       <div class="lb-rank">${medal || (i + 1)}</div>
+      ${avatarHTML}
       <div class="lb-name">${esc(s.name)}</div>
       <div class="lb-points">
-        ${hasResults ? s.points : '—'}
+        <span class="lb-points-value" data-target="${s.points}">${hasResults ? 0 : '—'}</span>
         <span class="lb-points-label">${hasResults ? s.correct + ' rigtige' : 'POINT'}</span>
       </div>
     </div>`;
   }).join('');
 
   document.getElementById('lb-waiting').style.display = hasResults ? 'none' : 'block';
+
+  // Animate points counting up
+  if (hasResults) animatePoints();
+}
+
+function animatePoints() {
+  document.querySelectorAll('.lb-points-value[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    if (isNaN(target) || target === 0) { el.textContent = '0'; return; }
+    let current = 0;
+    const duration = 1200;
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      current = Math.round(eased * target);
+      el.textContent = current;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
 }
 
 // ═══════════════════════════════════════
-// ADMIN — click leaderboard title 5× to open
+// ADMIN
 // ═══════════════════════════════════════
 function adminClick() {
   adminClicks++;
@@ -380,8 +518,7 @@ function renderAdmin() {
     teams.forEach(tk => {
       if (tk) {
         const o = document.createElement('option');
-        o.value = tk;
-        o.textContent = TEAMS[tk].short;
+        o.value = tk; o.textContent = TEAMS[tk].short;
         if (results[mid] === tk) o.selected = true;
         sel.appendChild(o);
       }
@@ -397,8 +534,7 @@ function saveAdminResults() {
     if (sel.value) results[sel.dataset.match] = sel.value;
   });
   localStorage.setItem('ucl_results', JSON.stringify(results));
-  renderLeaderboard();
-  renderAdmin();
+  renderLeaderboard(); renderAdmin();
   showToast('Resultater gemt!');
 }
 
@@ -424,8 +560,7 @@ function spawnConfetti() {
 
 function showToast(msg) {
   document.querySelectorAll('.toast').forEach(t => t.remove());
-  const t = el('div', 'toast');
-  t.textContent = msg;
+  const t = el('div', 'toast'); t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
@@ -462,7 +597,6 @@ function drawStars(t) {
   g.addColorStop(1, 'transparent');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   for (const s of stars) {
     const op = s.base + Math.sin(t * s.speed + s.phase) * 0.2;
     ctx.beginPath();

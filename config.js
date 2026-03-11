@@ -4,8 +4,6 @@
 // ╚══════════════════════════════════════════════════════════════╝
 
 // ─── TEAMS ───
-// Each team needs: name, short code, crest ID (from football-data.org), and two brand colors.
-// Set crest to null if no logo is available (will show abbreviation instead).
 const TEAMS = {
   psg:         { name: 'Paris Saint-Germain', short: 'PSG', crest: '524', colors: ['#004170','#DA291C'] },
   chelsea:     { name: 'Chelsea',             short: 'CHE', crest: '61',  colors: ['#034694','#DBA111'] },
@@ -26,34 +24,25 @@ const TEAMS = {
 };
 
 // ─── BRACKET ───
-// The bracket defines all matches and how they connect.
-// R16 matches have fixed team arrays. Later rounds get their teams from predictions.
-// "next" = which match the winner advances to.  "slot" = position in that next match (0 or 1).
 const BRACKET = {
-  // Round of 16 — Left side
   r16_1: { teams: ['psg',        'chelsea'],    round: 'r16', next: 'qf_1', slot: 0 },
   r16_2: { teams: ['galatasaray','liverpool'],  round: 'r16', next: 'qf_1', slot: 1 },
   r16_3: { teams: ['real_madrid','man_city'],   round: 'r16', next: 'qf_2', slot: 0 },
   r16_4: { teams: ['atalanta',   'bayern'],     round: 'r16', next: 'qf_2', slot: 1 },
-  // Round of 16 — Right side
   r16_5: { teams: ['newcastle',  'barcelona'],  round: 'r16', next: 'qf_3', slot: 0 },
   r16_6: { teams: ['atletico',   'tottenham'],  round: 'r16', next: 'qf_3', slot: 1 },
   r16_7: { teams: ['bodo_glimt', 'sporting'],   round: 'r16', next: 'qf_4', slot: 0 },
   r16_8: { teams: ['leverkusen', 'arsenal'],    round: 'r16', next: 'qf_4', slot: 1 },
-  // Quarter-finals
   qf_1:  { teams: [null, null], round: 'qf',    next: 'sf_1',  slot: 0 },
   qf_2:  { teams: [null, null], round: 'qf',    next: 'sf_1',  slot: 1 },
   qf_3:  { teams: [null, null], round: 'qf',    next: 'sf_2',  slot: 0 },
   qf_4:  { teams: [null, null], round: 'qf',    next: 'sf_2',  slot: 1 },
-  // Semi-finals
   sf_1:  { teams: [null, null], round: 'sf',    next: 'final', slot: 0 },
   sf_2:  { teams: [null, null], round: 'sf',    next: 'final', slot: 1 },
-  // Final
   final: { teams: [null, null], round: 'final', next: null,    slot: 0 },
 };
 
 // ─── LAYOUT ───
-// Which matches go in each bracket column. Left side reads L→R, right side reads L→R.
 const LAYOUT = {
   leftR16:  ['r16_1', 'r16_2', 'r16_3', 'r16_4'],
   leftQF:   ['qf_1', 'qf_2'],
@@ -64,42 +53,45 @@ const LAYOUT = {
 };
 
 // ─── SCORING ───
-// Points awarded per correct prediction in each round.
 const POINTS = { r16: 1, qf: 2, sf: 3, final: 5 };
 
 // ─── GROUPS ───
-// The age groups available in the selector.
 const GROUPS = ['U11', 'U8'];
 
+// ─── DEADLINE ───
+// Predictions lock at this time. Set to null to disable.
+// Second legs start 17 March 2026 at 21:00 CET — lock 1 hour before.
+const DEADLINE = '2026-03-17T20:00:00+01:00';
+
 // ─── ACTUAL RESULTS ───
-// Fill in match winners as they happen. Use the team key (e.g., 'liverpool', 'bayern').
-// The leaderboard will automatically calculate points based on these.
-//
-// Example:
-//   RESULTS.r16_1 = 'chelsea';    // Chelsea beat PSG
-//   RESULTS.r16_4 = 'bayern';     // Bayern beat Atalanta
-//
+// Filled in automatically by the GitHub Action, or manually.
+// Use team key as value (e.g. 'liverpool', 'bayern').
 const RESULTS = {
   // Round of 16
-  // r16_1: '',   // PSG vs Chelsea
-  // r16_2: '',   // Galatasaray vs Liverpool
-  // r16_3: '',   // Real Madrid vs Man City
-  // r16_4: '',   // Atalanta vs Bayern
-  // r16_5: '',   // Newcastle vs Barcelona
-  // r16_6: '',   // Atletico vs Tottenham
-  // r16_7: '',   // Bodo/Glimt vs Sporting
-  // r16_8: '',   // Leverkusen vs Arsenal
-
+  // r16_1: '', // PSG vs Chelsea
+  // r16_2: '', // Galatasaray vs Liverpool
+  // r16_3: '', // Real Madrid vs Man City
+  // r16_4: '', // Atalanta vs Bayern
+  // r16_5: '', // Newcastle vs Barcelona
+  // r16_6: '', // Atletico vs Tottenham
+  // r16_7: '', // Bodo/Glimt vs Sporting
+  // r16_8: '', // Leverkusen vs Arsenal
   // Quarter-finals
   // qf_1: '',
   // qf_2: '',
   // qf_3: '',
   // qf_4: '',
-
   // Semi-finals
   // sf_1: '',
   // sf_2: '',
-
   // Final
   // final: '',
+};
+
+// ─── SCORES ───
+// Aggregate scores for display in the bracket. Populated by the fetch script.
+// Format: { matchId: { agg: [team1Goals, team2Goals], pen: [t1, t2] } }
+// Team order matches the BRACKET teams array order.
+const SCORES = {
+  // Example: r16_4: { agg: [1, 6] }  means Atalanta 1 - 6 Bayern (aggregate)
 };

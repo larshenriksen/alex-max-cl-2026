@@ -24,6 +24,10 @@
       <input type="text" id="input-name" placeholder="Skriv dit navn her..." maxlength="30" autocomplete="off">
     </div>
     <div class="input-group">
+      <label>Vælg Dit Favorithold</label>
+      <div class="avatar-grid" id="avatar-grid"></div>
+    </div>
+    <div class="input-group">
       <label>Vælg Din Gruppe</label>
       <div class="group-selector" id="group-selector"></div>
     </div>
@@ -43,6 +47,9 @@
       <button onclick="showPage('leaderboard')">Rangliste</button>
     </div>
   </nav>
+  <div id="lock-banner" class="lock-banner" style="display:none">
+    🔒 Deadline er udløbet — forudsigelser er låst
+  </div>
   <div class="scroll-hint">← Scroll for at se hele bracketet →</div>
   <div class="bracket-header-row">
     <span>1/8-FINALE</span><span>KVARTFINALE</span><span>SEMIFINALE</span>
@@ -80,11 +87,39 @@
   </div>
 </div>
 
-<!-- Load config first, then app logic -->
 <script src="config.js"></script>
 <script src="app.js"></script>
 <script>
-// Generate group buttons and leaderboard tabs from config
+// Generate avatar grid from teams
+const avatarGrid = document.getElementById('avatar-grid');
+Object.entries(TEAMS).forEach(([key, team]) => {
+  const btn = document.createElement('div');
+  btn.className = 'avatar-option';
+  btn.dataset.team = key;
+  btn.onclick = () => selectAvatar(key);
+  if (team.crest) {
+    const img = document.createElement('img');
+    img.src = crestURL(team.crest);
+    img.alt = team.short;
+    img.onerror = function() {
+      this.replaceWith(Object.assign(document.createElement('div'), {
+        className: 'avatar-fb-inner',
+        textContent: team.short.substring(0, 3),
+        style: `background:linear-gradient(135deg,${team.colors[0]},${team.colors[1]})`
+      }));
+    };
+    btn.appendChild(img);
+  } else {
+    const fb = document.createElement('div');
+    fb.className = 'avatar-fb-inner';
+    fb.textContent = team.short.substring(0, 3);
+    fb.style.background = `linear-gradient(135deg,${team.colors[0]},${team.colors[1]})`;
+    btn.appendChild(fb);
+  }
+  avatarGrid.appendChild(btn);
+});
+
+// Generate group buttons
 const groupSel = document.getElementById('group-selector');
 GROUPS.forEach(g => {
   groupSel.innerHTML += `<div class="group-btn" data-group="${g}" onclick="selectGroup('${g}')">
@@ -92,6 +127,8 @@ GROUPS.forEach(g => {
     <div class="group-sub">Hold ${g}</div>
   </div>`;
 });
+
+// Generate leaderboard tabs
 const lbTabsEl = document.getElementById('lb-tabs');
 GROUPS.forEach((g, i) => {
   lbTabsEl.innerHTML += `<button class="lb-tab${i===0?' active':''}" data-group="${g}" onclick="switchLBTab('${g}')">${g}</button>`;

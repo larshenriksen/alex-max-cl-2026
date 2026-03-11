@@ -204,10 +204,47 @@ function findBracketMatchId(stage, teamA, teamB, resolvedResults) {
   return null;
 }
 
+// ─── Calculate aggregate score for a tie, ordered by our bracket pairing ───
+function getTieScore(tie, matchId) {
+  const finished = tie.legs.filter(m => m.status === 'FINISHED');
+  if (finished.length === 0) return null;
+
+  // Get bracket team order
+  const bracketTeams = R16_PAIRINGS[matchId] || null;
+
+  // Calculate total goals per team
+  const goals = {};
+  tie.teams.forEach(t => goals[t] = 0);
+  for (const m of finished) {
+    const hk = resolveTeamKey(m.homeTeam.id, m.homeTeam.name);
+    const ak = resolveTeamKey(m.awayTeam.id, m.awayTeam.name);
+    const score = m.score.fullTime;
+    if (!score) continue;
+    goals[hk] = (goals[hk] || 0) + score.home;
+    goals[ak] = (goals[ak] || 0) + score.away;
+  }
+
+  // Order by bracket pairing if available, otherwise alphabetical
+  const ordered = bracketTeams || tie.teams;
+  const result = { agg: [goals[ordered[0]] || 0, goals[ordered[1]] || 0] };
+
+  // Check for penalties
+  const secondLeg = finished.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)).pop();
+  if (secondLeg && secondLeg.score.penalties) {
+    const hk = resolveTeamKey(secondLeg.homeTeam.id, secondLeg.homeTeam.name);
+    const ak = resolveTeamKey(secondLeg.awayTeam.id, secondLeg.awayTeam.name);
+    const penMap = { [hk]: secondLeg.score.penalties.home, [ak]: secondLeg.score.penalties.away };
+    result.pen = [penMap[ordered[0]] || 0, penMap[ordered[1]] || 0];
+  }
+
+  return result;
+}
+
 // ─── Write results back to config.js ───
-function updateConfigFile(results) {
+function updateConfigFile(results, scores) {
   let content = fs.readFileSync(CONFIG_PATH, 'utf-8');
 
+  // Build RESULTS block
   const lines = ['const RESULTS = {'];
   const rounds = [
     ['Round of 16', ['r16_1','r16_2','r16_3','r16_4','r16_5','r16_6','r16_7','r16_8']],
@@ -215,7 +252,6 @@ function updateConfigFile(results) {
     ['Semi-finals', ['sf_1','sf_2']],
     ['Final', ['final']],
   ];
-
   for (const [roundName, matchIds] of rounds) {
     lines.push(`  // ${roundName}`);
     for (const mid of matchIds) {
@@ -228,16 +264,30 @@ function updateConfigFile(results) {
     }
   }
   lines.push('};');
+  const resultsBlock = lines.join('\n');
 
-  const newBlock = lines.join('\n');
-  const regex = /const RESULTS = \{[\s\S]*?\};/;
-
-  if (!regex.test(content)) {
-    console.error('Could not find RESULTS block in config.js');
-    process.exit(1);
+  // Build SCORES block
+  const sLines = ['const SCORES = {'];
+  for (const [mid, sc] of Object.entries(scores)) {
+    if (sc.pen) {
+      sLines.push(`  ${mid}: { agg: [${sc.agg[0]}, ${sc.agg[1]}], pen: [${sc.pen[0]}, ${sc.pen[1]}] },`);
+    } else {
+      sLines.push(`  ${mid}: { agg: [${sc.agg[0]}, ${sc.agg[1]}] },`);
+    }
   }
+  sLines.push('};');
+  const scoresBlock = sLines.join('\n');
 
-  content = content.replace(regex, newBlock);
+  // Replace both blocks
+  const resultsRegex = /const RESULTS = \{[\s\S]*?\};/;
+  const scoresRegex = /const SCORES = \{[\s\S]*?\};/;
+
+  if (!resultsRegex.test(content)) { console.error('Cannot find RESULTS in config.js'); process.exit(1); }
+  if (!scoresRegex.test(content)) { console.error('Cannot find SCORES in config.js'); process.exit(1); }
+
+  content = content.replace(resultsRegex, resultsBlock);
+  content = content.replace(scoresRegex, scoresBlock);
+
   fs.writeFileSync(CONFIG_PATH, content);
   console.log('config.js updated.');
 }
@@ -259,6 +309,7 @@ async function main() {
 
   const ties = groupIntoTies(knockoutMatches);
   const results = {};
+  const scores = {};
 
   // Process stages in order so later rounds can look up earlier results
   for (const stage of knockoutStages) {
@@ -268,7 +319,9 @@ async function main() {
       const mid = findBracketMatchId(stage, tie.teams[0], tie.teams[1], results);
       if (mid) {
         results[mid] = winner;
-        console.log(`  ${mid}: ${winner} (${tie.teams.join(' vs ')})`);
+        const sc = getTieScore(tie, mid);
+        if (sc) scores[mid] = sc;
+        console.log(`  ${mid}: ${winner} (${tie.teams.join(' vs ')}) ${sc ? sc.agg.join('-') : ''}`);
       } else {
         console.warn(`  Could not map tie to bracket: ${tie.teams.join(' vs ')} (${stage})`);
       }
@@ -281,7 +334,7 @@ async function main() {
   }
 
   console.log(`\nUpdating config.js with ${Object.keys(results).length} result(s)...`);
-  updateConfigFile(results);
+  updateConfigFile(results, scores);
 }
 
 main().catch(err => {
