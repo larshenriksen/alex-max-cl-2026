@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Champions League 2025/26 — Prediction Game</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- ════════ WELCOME ════════ -->
+<div id="page-welcome" class="page active welcome">
+  <div class="welcome-logo"><span class="starball">⭐</span></div>
+  <h1>CHAMPIONS LEAGUE</h1>
+  <p class="subtitle">PREDICTION GAME 2025/26</p>
+  <div class="welcome-form">
+    <div class="input-group">
+      <label>Dit Navn</label>
+      <input type="text" id="input-name" placeholder="Skriv dit navn her..." maxlength="30" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <label>Vælg Din Gruppe</label>
+      <div class="group-selector" id="group-selector"></div>
+    </div>
+    <button class="btn-primary" id="btn-start" onclick="startPredictions()" disabled>START</button>
+  </div>
+</div>
+
+<!-- ════════ BRACKET ════════ -->
+<div id="page-bracket" class="page bracket-page">
+  <nav class="topnav">
+    <div>
+      <span class="topnav-title">⭐ UCL 2025/26</span>
+      <span class="topnav-user" id="topnav-user"></span>
+    </div>
+    <div class="topnav-links">
+      <button onclick="showPage('welcome')">Ny Spiller</button>
+      <button onclick="showPage('leaderboard')">Rangliste</button>
+    </div>
+  </nav>
+  <div class="scroll-hint">← Scroll for at se hele bracketet →</div>
+  <div class="bracket-header-row">
+    <span>1/8-FINALE</span><span>KVARTFINALE</span><span>SEMIFINALE</span>
+    <span class="final-header">FINALE</span>
+    <span>SEMIFINALE</span><span>KVARTFINALE</span><span>1/8-FINALE</span>
+  </div>
+  <div class="bracket-wrap">
+    <div class="bracket" id="bracket"></div>
+  </div>
+  <div class="bracket-actions">
+    <button class="btn-primary" id="btn-submit" onclick="submitPredictions()">INDSEND FORUDSIGELSER</button>
+    <div class="submit-info" id="submit-info">Vælg en vinder i hver kamp for at indsende</div>
+  </div>
+</div>
+
+<!-- ════════ LEADERBOARD ════════ -->
+<div id="page-leaderboard" class="page leaderboard-page">
+  <nav class="topnav">
+    <div class="topnav-title">⭐ UCL 2025/26</div>
+    <div class="topnav-links">
+      <button onclick="showPage('welcome')">Ny Spiller</button>
+      <button onclick="showPage('bracket')">Bracket</button>
+    </div>
+  </nav>
+  <div class="lb-header">
+    <h2 id="lb-title" onclick="adminClick()">RANGLISTE</h2>
+    <div class="lb-tabs" id="lb-tabs"></div>
+  </div>
+  <div class="lb-container" id="lb-container"></div>
+  <div class="lb-waiting" id="lb-waiting">⏳ Venter på kampresultater — point opdateres løbende</div>
+  <div class="admin-panel" id="admin-panel">
+    <h3>ADMIN — Indtast Resultater</h3>
+    <div id="admin-matches"></div>
+    <button class="admin-save" onclick="saveAdminResults()">Gem Resultater</button>
+  </div>
+</div>
+
+<!-- Load config first, then app logic -->
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+// Generate group buttons and leaderboard tabs from config
+const groupSel = document.getElementById('group-selector');
+GROUPS.forEach(g => {
+  groupSel.innerHTML += `<div class="group-btn" data-group="${g}" onclick="selectGroup('${g}')">
+    <div class="group-label">${g}</div>
+    <div class="group-sub">Hold ${g}</div>
+  </div>`;
+});
+const lbTabsEl = document.getElementById('lb-tabs');
+GROUPS.forEach((g, i) => {
+  lbTabsEl.innerHTML += `<button class="lb-tab${i===0?' active':''}" data-group="${g}" onclick="switchLBTab('${g}')">${g}</button>`;
+});
+</script>
+</body>
+</html>
