@@ -189,9 +189,13 @@ async function tryRestoreUser() {
   const saved = loadFromStorage('ucl_current_user', null);
   if (!saved || !saved.name || !saved.group) return;
 
+  // Immediately hide welcome and show bracket to avoid flash
   currentUser = saved;
   selectedGroup = saved.group;
   selectedAvatar = saved.avatar || '';
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-bracket').classList.add('active');
 
   if (useFirebase) await refreshFromFirebase();
 
@@ -1137,10 +1141,5 @@ function logoutUser() {
   showPage('welcome');
 }
 
-// Try to restore user on page load
-tryRestoreUser().then(() => {
-  // If no user was restored, fetch player count for the welcome page
-  if (!currentUser.name && useFirebase) {
-    refreshFromFirebase().then(() => updatePlayerCount());
-  }
-});
+// tryRestoreUser() is called from the inline script in index.html
+// after all UI elements (avatar grid, group buttons) are generated.

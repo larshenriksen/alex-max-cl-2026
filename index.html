@@ -188,6 +188,13 @@ const statsTabsEl = document.getElementById('stats-round-tabs');
 [['r16','1/8-Finale'],['qf','Kvartfinale'],['sf','Semifinale'],['final','Finale']].forEach(([k,v], i) => {
   statsTabsEl.innerHTML += `<button class="stats-round-tab${i===0?' active':''}" data-round="${k}" onclick="switchStatsRound('${k}')">${v}</button>`;
 });
+
+// Restore returning user (must run after UI elements are generated)
+tryRestoreUser().then(() => {
+  if (!currentUser.name && useFirebase) {
+    refreshFromFirebase().then(() => updatePlayerCount());
+  }
+});
 </script>
 </body>
 </html>
