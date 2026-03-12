@@ -69,6 +69,28 @@ const FIREBASE_URL = 'https://alex-og-max-cl-2026-default-rtdb.europe-west1.fire
 // Second legs start 17 March 2026 at 21:00 CET — lock 1 hour before.
 const DEADLINE = '2026-03-17T20:00:00+01:00';
 
+// ─── KICKOFF TIMES ───
+// Used for LIVE badge. Format: ISO 8601. Each match ~105 min.
+// R16 second legs: 17–18 March 2026. QF/SF/Final TBD.
+const KICKOFFS = {
+  r16_1: '2026-03-17T21:00:00+01:00',
+  r16_2: '2026-03-17T21:00:00+01:00',
+  r16_3: '2026-03-18T21:00:00+01:00',
+  r16_4: '2026-03-18T21:00:00+01:00',
+  r16_5: '2026-03-17T21:00:00+01:00',
+  r16_6: '2026-03-17T21:00:00+01:00',
+  r16_7: '2026-03-18T21:00:00+01:00',
+  r16_8: '2026-03-18T21:00:00+01:00',
+  // QF, SF, Final — update when scheduled
+  // qf_1: '',
+  // qf_2: '',
+  // qf_3: '',
+  // qf_4: '',
+  // sf_1: '',
+  // sf_2: '',
+  // final: '',
+};
+
 // ─── ACTUAL RESULTS ───
 // Filled in automatically by the GitHub Action, or manually.
 // Use team key as value (e.g. 'liverpool', 'bayern').

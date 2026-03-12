@@ -19,6 +19,10 @@
   <h1>CHAMPIONS LEAGUE</h1>
   <p class="subtitle">PREDICTION GAME 2025/26</p>
   <p class="hosted-by">Lavet af Alex og Max</p>
+  <div class="countdown-wrap">
+    <span class="countdown-label">DEADLINE</span>
+    <span class="countdown" id="countdown"></span>
+  </div>
   <div class="welcome-form">
     <div class="input-group">
       <label>Dit Navn</label>
@@ -33,6 +37,19 @@
       <div class="group-selector" id="group-selector"></div>
     </div>
     <button class="btn-primary" id="btn-start" onclick="startPredictions()" disabled>START</button>
+    <div class="player-count" id="player-count"></div>
+  </div>
+</div>
+
+<!-- ════════ CONFIRM DIALOG ════════ -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-dialog">
+    <h3>Er du sikker?</h3>
+    <p>Når du indsender, kan du ikke ændre dine forudsigelser.</p>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Annuller</button>
+      <button class="btn-primary" onclick="confirmSubmit()">JA, INDSEND</button>
+    </div>
   </div>
 </div>
 
@@ -44,14 +61,21 @@
       <span class="topnav-user" id="topnav-user"></span>
     </div>
     <div class="topnav-links">
-      <button onclick="showPage('welcome')">Ny Spiller</button>
+      <button onclick="logoutUser()">Skift Spiller</button>
       <button onclick="showPage('leaderboard')">Rangliste</button>
     </div>
   </nav>
   <div id="lock-banner" class="lock-banner" style="display:none">
     🔒 Deadline er udløbet — forudsigelser er låst
   </div>
-  <div class="scroll-hint">← Scroll for at se hele bracketet →</div>
+  <div class="scroll-hint desktop-only">← Scroll for at se hele bracketet →</div>
+  <div class="mobile-round-tabs" id="mobile-round-tabs">
+    <button class="mobile-round-tab active" data-round="all" onclick="setMobileRound('all')">ALLE</button>
+    <button class="mobile-round-tab" data-round="r16" onclick="setMobileRound('r16')">1/8</button>
+    <button class="mobile-round-tab" data-round="qf" onclick="setMobileRound('qf')">KF</button>
+    <button class="mobile-round-tab" data-round="sf" onclick="setMobileRound('sf')">SF</button>
+    <button class="mobile-round-tab" data-round="final" onclick="setMobileRound('final')">FINALE</button>
+  </div>
   <div class="bracket-header-row">
     <span>1/8-FINALE</span><span>KVARTFINALE</span><span>SEMIFINALE</span>
     <span class="final-header">FINALE</span>
@@ -60,7 +84,11 @@
   <div class="bracket-wrap">
     <div class="bracket" id="bracket"></div>
   </div>
+  <div class="mobile-matches" id="mobile-matches"></div>
   <div class="bracket-actions">
+    <div class="progress-bar-wrap" id="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
     <button class="btn-primary" id="btn-submit" onclick="submitPredictions()">INDSEND FORUDSIGELSER</button>
     <div class="submit-info" id="submit-info">Vælg en vinder i hver kamp for at indsende</div>
   </div>
@@ -71,13 +99,17 @@
   <nav class="topnav">
     <div class="topnav-title">⭐ UCL 2025/26</div>
     <div class="topnav-links">
-      <button onclick="showPage('welcome')">Ny Spiller</button>
+      <button onclick="logoutUser()">Skift Spiller</button>
       <button onclick="showPage('bracket')">Bracket</button>
     </div>
   </nav>
   <div class="lb-header">
     <h2 id="lb-title" onclick="adminClick()">RANGLISTE</h2>
     <div class="lb-tabs" id="lb-tabs"></div>
+    <div class="lb-actions">
+      <button class="btn-secondary" onclick="showMyPicks()">Mine Picks</button>
+      <button class="btn-secondary" onclick="showPage('stats')">Statistik</button>
+    </div>
   </div>
   <div class="lb-container" id="lb-container"></div>
   <div class="lb-waiting" id="lb-waiting">⏳ Venter på kampresultater — point opdateres løbende</div>
@@ -86,6 +118,22 @@
     <div id="admin-matches"></div>
     <button class="admin-save" onclick="saveAdminResults()">Gem Resultater</button>
   </div>
+</div>
+
+<!-- ════════ STATS ════════ -->
+<div id="page-stats" class="page stats-page">
+  <nav class="topnav">
+    <div class="topnav-title">⭐ UCL 2025/26</div>
+    <div class="topnav-links">
+      <button onclick="showPage('leaderboard')">Rangliste</button>
+      <button onclick="showPage('bracket')">Bracket</button>
+    </div>
+  </nav>
+  <div class="stats-header">
+    <h2>HVEM VALGTE HVAD?</h2>
+    <div class="stats-tabs" id="stats-round-tabs"></div>
+  </div>
+  <div class="stats-container" id="stats-container"></div>
 </div>
 
 <script src="config.js"></script>
@@ -133,6 +181,12 @@ GROUPS.forEach(g => {
 const lbTabsEl = document.getElementById('lb-tabs');
 GROUPS.forEach((g, i) => {
   lbTabsEl.innerHTML += `<button class="lb-tab${i===0?' active':''}" data-group="${g}" onclick="switchLBTab('${g}')">${g}</button>`;
+});
+
+// Generate stats round tabs
+const statsTabsEl = document.getElementById('stats-round-tabs');
+[['r16','1/8-Finale'],['qf','Kvartfinale'],['sf','Semifinale'],['final','Finale']].forEach(([k,v], i) => {
+  statsTabsEl.innerHTML += `<button class="stats-round-tab${i===0?' active':''}" data-round="${k}" onclick="switchStatsRound('${k}')">${v}</button>`;
 });
 </script>
 </body>
