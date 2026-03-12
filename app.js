@@ -113,6 +113,7 @@ let _lbRefreshInterval = null;
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
+  window.scrollTo(0, 0);
   if (id === 'bracket') {
     const userEl = document.getElementById('topnav-user');
     if (userEl) userEl.textContent = currentUser.name ? `${currentUser.name} (${currentUser.group})` : '';
