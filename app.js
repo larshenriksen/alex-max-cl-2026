@@ -667,6 +667,9 @@ function confirmSubmit() {
   spawnConfetti();
   showToast(`${currentUser.name} — dine forudsigelser er gemt!`);
   renderBracket();
+
+  // Switch to leaderboard after a short delay
+  setTimeout(() => showPage('leaderboard'), 2500);
 }
 
 // ─── Offline Queue ───
