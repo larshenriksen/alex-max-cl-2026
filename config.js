@@ -7,7 +7,7 @@
 const TEAMS = {
   psg:         { name: 'Paris Saint-Germain', short: 'PSG', crest: '524', colors: ['#004170','#DA291C'] },
   chelsea:     { name: 'Chelsea',             short: 'CHE', crest: '61',  colors: ['#034694','#DBA111'] },
-  galatasaray: { name: 'Galatasaray',         short: 'GAL', crest: '548', colors: ['#ED1C24','#FF8C00'] },
+  galatasaray: { name: 'Galatasaray',         short: 'GAL', crest: '610', colors: ['#ED1C24','#FF8C00'] },
   liverpool:   { name: 'Liverpool',           short: 'LIV', crest: '64',  colors: ['#C8102E','#00B2A9'] },
   real_madrid: { name: 'Real Madrid',         short: 'RMA', crest: '86',  colors: ['#FEBE10','#00529F'] },
   man_city:    { name: 'Manchester City',     short: 'MCI', crest: '65',  colors: ['#6CABDD','#1C2C5B'] },
