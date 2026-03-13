@@ -750,7 +750,7 @@ function renderLeaderboard() {
       ? (TEAMS[s.avatar].crest
           ? `<img class="lb-avatar" src="${crestURL(TEAMS[s.avatar].crest)}" alt="${TEAMS[s.avatar].short}" onerror="this.style.display='none'">`
           : `<div class="lb-avatar-fb" style="background:linear-gradient(135deg,${TEAMS[s.avatar].colors[0]},${TEAMS[s.avatar].colors[1]})">${TEAMS[s.avatar].short.substring(0,2)}</div>`)
-      : '<div class="lb-avatar-fb" style="background:rgba(255,255,255,0.08)">?</div>';
+      : '<img class="lb-avatar" src="dalum-if.png" alt="Dalum IF">';
 
     return `<div class="lb-entry ${rc}" onclick="showUserPicks('${esc(s.name).replace(/'/g, "\\'")}', '${s.group}')" style="cursor:pointer" title="Klik for at se ${esc(s.name)}s forudsigelser">
       <div class="lb-rank">${medal || (i + 1)}</div>
