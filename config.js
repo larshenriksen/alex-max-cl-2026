@@ -102,18 +102,18 @@ const RESULTS = {
   // r16_4: '', // Atalanta vs Bayern
   // r16_5: '', // Newcastle vs Barcelona
   // r16_6: '', // Atletico vs Tottenham
-  // r16_7: '', // Bodo/Glimt vs Sporting
+  r16_7: 'sporting', // Bodo/Glimt vs Sporting
   // r16_8: '', // Leverkusen vs Arsenal
   // Quarter-finals
-  // qf_1: '',
-  // qf_2: '',
-  // qf_3: '',
-  // qf_4: '',
+  // qf_1: '', // Quarter-final 1
+  // qf_2: '', // Quarter-final 2
+  // qf_3: '', // Quarter-final 3
+  // qf_4: '', // Quarter-final 4
   // Semi-finals
-  // sf_1: '',
-  // sf_2: '',
+  // sf_1: '', // Semi-final 1
+  // sf_2: '', // Semi-final 2
   // Final
-  // final: '',
+  // final: '', // Final
 };
 
 // ─── SCORES ───
@@ -121,5 +121,5 @@ const RESULTS = {
 // Format: { matchId: { agg: [team1Goals, team2Goals], pen: [t1, t2] } }
 // Team order matches the BRACKET teams array order.
 const SCORES = {
-  // Example: r16_4: { agg: [1, 6] }  means Atalanta 1 - 6 Bayern (aggregate)
+  r16_7: { agg: [3, 5], pen: [0, 0] },
 };
