@@ -100,7 +100,7 @@ const RESULTS = {
   // r16_2: '', // Galatasaray vs Liverpool
   r16_3: 'real_madrid', // Real Madrid vs Man City
   // r16_4: '', // Atalanta vs Bayern
-  // r16_5: '', // Newcastle vs Barcelona
+  r16_5: 'barcelona', // Newcastle vs Barcelona
   // r16_6: '', // Atletico vs Tottenham
   r16_7: 'sporting', // Bodo/Glimt vs Sporting
   r16_8: 'arsenal', // Leverkusen vs Arsenal
@@ -121,6 +121,7 @@ const RESULTS = {
 // Format: { matchId: { agg: [team1Goals, team2Goals], pen: [t1, t2] } }
 // Team order matches the BRACKET teams array order.
 const SCORES = {
+  r16_5: { agg: [3, 8], pen: [0, 0] },
   r16_8: { agg: [1, 3] },
   r16_1: { agg: [8, 2] },
   r16_3: { agg: [5, 1] },
