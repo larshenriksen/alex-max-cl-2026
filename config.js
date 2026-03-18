@@ -96,14 +96,14 @@ const KICKOFFS = {
 // Use team key as value (e.g. 'liverpool', 'bayern').
 const RESULTS = {
   // Round of 16
-  // r16_1: '', // PSG vs Chelsea
+  r16_1: 'psg', // PSG vs Chelsea
   // r16_2: '', // Galatasaray vs Liverpool
-  // r16_3: '', // Real Madrid vs Man City
+  r16_3: 'real_madrid', // Real Madrid vs Man City
   // r16_4: '', // Atalanta vs Bayern
   // r16_5: '', // Newcastle vs Barcelona
   // r16_6: '', // Atletico vs Tottenham
   r16_7: 'sporting', // Bodo/Glimt vs Sporting
-  // r16_8: '', // Leverkusen vs Arsenal
+  r16_8: 'arsenal', // Leverkusen vs Arsenal
   // Quarter-finals
   // qf_1: '', // Quarter-final 1
   // qf_2: '', // Quarter-final 2
@@ -121,5 +121,8 @@ const RESULTS = {
 // Format: { matchId: { agg: [team1Goals, team2Goals], pen: [t1, t2] } }
 // Team order matches the BRACKET teams array order.
 const SCORES = {
-  r16_7: { agg: [3, 5], pen: [0, 0] },
+  r16_8: { agg: [1, 3] },
+  r16_1: { agg: [8, 2] },
+  r16_3: { agg: [5, 1] },
+  r16_7: { agg: [3, 5] },
 };
