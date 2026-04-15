@@ -106,9 +106,9 @@ const RESULTS = {
   r16_8: 'arsenal', // Leverkusen vs Arsenal
   // Quarter-finals
   qf_1: 'psg', // Quarter-final 1
-  // qf_2: '', // Quarter-final 2
+  qf_2: 'bayern', // Quarter-final 2
   qf_3: 'atletico', // Quarter-final 3
-  // qf_4: '', // Quarter-final 4
+  qf_4: 'arsenal', // Quarter-final 4
   // Semi-finals
   // sf_1: '', // Semi-final 1
   // sf_2: '', // Semi-final 2
@@ -129,6 +129,8 @@ const SCORES = {
   r16_1: { agg: [8, 2] },
   r16_3: { agg: [5, 1] },
   r16_7: { agg: [3, 5] },
-  qf_1: { agg: [0, 4], pen: [0, 0] },
-  qf_3: { agg: [3, 3], pen: [0, 0] },
+  qf_2: { agg: [6, 4], pen: [0, 0] },
+  qf_4: { agg: [1, 0], pen: [0, 0] },
+  qf_1: { agg: [0, 4] },
+  qf_3: { agg: [3, 2] },
 };
