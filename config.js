@@ -110,8 +110,8 @@ const RESULTS = {
   qf_3: 'atletico', // Quarter-final 3
   qf_4: 'arsenal', // Quarter-final 4
   // Semi-finals
-  // sf_1: '', // Semi-final 1
-  // sf_2: '', // Semi-final 2
+  sf_1: 'psg', // Semi-final 1
+  sf_2: 'arsenal', // Semi-final 2
   // Final
   // final: '', // Final
 };
@@ -129,8 +129,10 @@ const SCORES = {
   r16_1: { agg: [8, 2] },
   r16_3: { agg: [5, 1] },
   r16_7: { agg: [3, 5] },
-  qf_2: { agg: [6, 4], pen: [0, 0] },
-  qf_4: { agg: [1, 0], pen: [0, 0] },
-  qf_1: { agg: [0, 4], pen: [0, 0] },
-  qf_3: { agg: [3, 3], pen: [0, 0] },
+  qf_2: { agg: [6, 4] },
+  qf_4: { agg: [1, 0] },
+  qf_1: { agg: [0, 4] },
+  qf_3: { agg: [3, 2] },
+  sf_1: { agg: [5, 6], pen: [0, 0] },
+  sf_2: { agg: [2, 1], pen: [0, 0] },
 };
