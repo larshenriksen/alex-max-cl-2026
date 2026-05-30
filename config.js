@@ -113,7 +113,7 @@ const RESULTS = {
   sf_1: 'psg', // Semi-final 1
   sf_2: 'arsenal', // Semi-final 2
   // Final
-  // final: '', // Final
+  final: 'arsenal', // Final
 };
 
 // ─── SCORES ───
@@ -135,4 +135,5 @@ const SCORES = {
   qf_3: { agg: [3, 2] },
   sf_1: { agg: [5, 6] },
   sf_2: { agg: [2, 1] },
+  final: { agg: [4, 5], pen: [3, 3] },
 };
